@@ -1,1 +1,50 @@
 eventbased-data-pipeline
+Problem Statement : Basically I am having a folder and a source is dumping files in it I have to create a target delta table where all the files data will be merged and if duplicate data exists the latest data will 
+persists in the table.
+
+          ┌──────────────────────────────┐
+          │ 1. Catalog: incremental_data_ingestion │
+          └──────────────────────────────┘
+                           │
+                           ▼
+          ┌──────────────────────────────┐
+          │ Volume: Source               │
+          │ ├── Source (CSV Files)       │
+          │ └── Archive (Processed Files)│
+          └──────────────────────────────┘
+                           │
+                           ▼
+          ┌──────────────────────────────┐
+          │ Step 1: Ingestion Script     │
+          │ - Reads CSV from Source      │
+          │ - Creates staging delta table│
+          │ - Writes data to staging     │
+          │ - Moves file to Archive      │
+          └──────────────────────────────┘
+                           │
+                           ▼
+          ┌──────────────────────────────┐
+          │ Step 2: Merge Script         │
+          │ - Reads from staging         │
+          │ - For each record:           │
+          │   - If exists in target:     │
+          │     - Delete & Insert new    │
+          │   - Else: Insert             │
+          │ - Write mode: Append         │
+          └──────────────────────────────┘
+                           │
+                           ▼
+          ┌──────────────────────────────┐
+          │ Final Delta Table (Target)   │
+          └──────────────────────────────┘
+
+
+
+Here are the steps I followed to make the project work
+  1 ) I created a catelog named incremental_data_ingestion
+  2 ) In that particular catelog I created a Volume named Source with two folders --> Source & Archive 
+      In my Source folder my data will come in csv files 
+      As soon as data will come here we will process the data after processing is Done it will automatically thrown to archive folder
+  3 ) My First Code file reads the file in the dicrectory create a delta table if not exists writes the data in the staging delta table moves the source file to archive folder
+  4 ) Now my second code file reads data from staging table and for each records check if already a record exists in target table if yes it deletes it and inserts the new record , If record does not exists in taget table 
+      that will be inserted since the mode I am writing is append.
